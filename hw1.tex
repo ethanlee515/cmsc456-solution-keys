@@ -1,0 +1,206 @@
+\documentclass{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{braket}
+\usepackage{hyperref, cleveref}
+\usepackage{algorithm}
+\usepackage{xcolor}
+
+\newcommand{\ga}[1]{{\noindent \textcolor{purple}{\emph{(GA: #1)}}}{}}
+
+\title{Homework 1 Solution Key}
+\author{Yi Lee}
+
+\DeclareMathOperator{\Bern}{Bern}
+
+\begin{document}
+
+\include{macros}
+
+\maketitle
+
+\section*{Problem 1}
+
+\noindent \emph{Solution.} Suppose we have a ciphertext from a broken historical cipher. The key observation is that the total number of historical ciphers is quite small, so one can simply try all the known attacks. 
+That is, given a ciphertext $c$, we perform:
+\begin{enumerate}
+    \item let $m$ be the result of the brute-force attack on the shift cipher, with input $c$. If $m$ is a valid sentence in English, terminate and output $m$.
+    \item let $m$ be the result of the frequency analysis attack for the Vigen\`ere cipher, with input $c$. If $m$ is a valid sentence in English, terminate and output $m$.
+    \item etc.
+\end{enumerate}
+
+~\\ \noindent \emph{Discussion.} In modern times, there are many more broken schemes out there, but the total number of them is still quite small relative to the power of modern computers. So a ``try-all-known-attacks'' algorithm is still feasible. Typically a clever cryptanalyst can even break a scheme that has never been published before; some tools (like frequency analysis) can reveal a lot of structure even if nothing is known about the scheme itself.
+
+
+\section*{Problem 2}
+
+\subsection*{Part a}
+
+We describe the scytale encryption scheme in \Cref{alg:scytale}.
+
+\begin{algorithm}
+    \caption{The Scytale Encryption}
+    \label{alg:scytale}
+    Key generation: On input $1^n$, sample and output a ``rod circumference" $\ell\gets\set{1, 2, \ldots, n - 1}$ randomly.\\
+    
+    Encrypt: For simplicity, we assume the length of the message is some multiple of $\ell$, and we write $n=k\ell$. This can always be achieved by padding the message with $0$s if necessary.
+    On inputs key $\ell$ and (zero-indexed) message $m\in\set{0, 1}^{k\ell}$,
+    \begin{enumerate}
+        \item Compute the ``rod content" matrix $R\in\set{0, 1}^{k\times\ell}$:
+        for each $0\leq x < k$ and $0\leq y < \ell$, set $R_{xy} = m_{x+\ell y}$.
+        \item For $0\leq i< k\ell$, compute $x_i=\lfloor\frac{i}{\ell}\rfloor$ and $y_i=\parens{i\mod \ell}$, and set $c_i=R_{x_iy_i}$.
+        \item Output the string $c=c_0c_1\ldots c_{k\ell-1}$.
+    \end{enumerate}
+    Decrypt: On inputs $\ell$ and $c\in\set{0, 1}^{k\ell}$,
+    \begin{enumerate}
+        \item Compute the ``rod content" matrix $R\in\set{0, 1}^{k\times\ell}$:
+        for each $0\leq x < k$ and $0\leq y < \ell$, set $R_{xy} = c_{y+\ell x}$.
+        \item For $0\leq i < n$, compute $x_i=\parens{i\mod \ell}$ and $y_i=\lfloor\frac{i}{\ell}\rfloor$, and set $m_i=R_{x_iy_i}$.
+        \item Output the string $m=m_0m_1\ldots m_{n-1}$.
+    \end{enumerate}
+\end{algorithm}
+
+\subsection*{Part b}
+
+No. Some ways to see this:
+\begin{itemize}
+    \item The encryptions of $0^n$ and $1^n$ are trivially distinguishable.
+    \item Encryption preserves the ``Hamming weight" (i.e., the number of $1$s) of the message. This implies that not all ciphertexts are equally likely.
+    \item One can break the scheme simply by trying all possible rod circumferences until the outcome message makes sense in English.
+\end{itemize}
+
+
+
+\section*{Problem 3}
+
+False. Suppose an adversary had some ``brute force'' method that, starting with a ciphertext $c$, produces a guess $k'$ for the key which is better than random guessing. In the OTP, the ciphertext and the key together fully determine the plaintext. Thus it follows that, by also outputting $m' := k' \oplus c$, the adversary could \emph{also} produce a guess $m'$ for the plaintext which is better than random guessing. This contradicts perfect secrecy which states that random guessing is the best strategy even after seeing the ciphertext $c$ (i.e., $\Pr[M=m | C=c] = \Pr[M=m]$). Note that this argument does not assume any particular distribution on messages.
+
+
+%Note that each ciphertext $c$ 
+%Given a ciphertext $c$, suppose an attacker checks all eight possible keys $(k_1, k_2, \ldots, k_8)$.
+%Recall that $c\oplus k = m$;
+%that is, for all fixed ciphertext $c$, there is a one-to-one correspondance between the key $k$ and the message $m$.
+%The attack is therefore equivalent to checking all possible messages $(m_1, m_2, \ldots, m_8)$ by brute force.
+%Recall however that we have
+%$$\Pr[M=m | C=c] = \Pr[M=m]$$
+%for all fixed $m, c$,
+%which shows that the ciphertext $c$ does not help in this setting.
+
+
+\section*{Problem 4}
+
+\subsection*{Part a}
+
+Let $\mathcal{D}_M$ be the distribution of messages.
+% Let $f^{-1}(s) = \set{x\in\set{0, 1}^n : f(x)=s}\subseteq\set{0, 1}^n$ denote the preimage set of $s$ under $f$.
+We then have
+\begin{align*}
+   \Pr\sqp{f(M)=s | C=c}
+   &=\Pr_{\substack{M\gets\mathcal{D}_M \\ k\gets\set{0, 1}^n}}\sqp{f(M)=s | M\oplus k=c} \\
+    &=\Pr_{\substack{M\gets\mathcal{D}_M \\ k\gets\set{0, 1}^n}}\sqp{f(M)=s | k=M\oplus c} \\
+    &= \frac{\Pr\sqp{f(M)=s \wedge k=M\oplus c}}{\Pr\sqp{k=M\oplus c}}
+\end{align*}
+We interpret the numerator operationally as first sampling $M$ and checking $f(M) = s$, then sampling $k$ and checking if it is precisely $M\oplus c$.
+We therefore have
+\begin{equation*}
+    \Pr_{\substack{M\gets\mathcal{D}_M \\ k\gets\set{0, 1}^n}}\sqp{f(M)=s \wedge k=M\oplus c} = \Pr_{\substack{M\gets\mathcal{D}_M}}\sqp{f(M)=s}\cdot \frac{1}{2^n}.
+\end{equation*}
+We interpret the denominator as first sampling $M$, then sampling $k$ and checking if it is precisely $M\oplus c$.
+We have
+\begin{equation*}
+    \Pr_{\substack{M\gets\mathcal{D}_M \\ k\gets\set{0, 1}^n}}\sqp{k=M\oplus c} = \frac{1}{2^n}.
+\end{equation*}
+Putting everything together, we conclude that
+\begin{equation}
+    \label{eq:otp-property}
+    \Pr\sqp{f(M)=s | C=c} =
+    \Pr\sqp{f(M)=s}.
+\end{equation}
+
+\subsection*{Part b}
+
+We interpret the expression $f(M)=s$ as that the message $M$ satisfies some property $s$ that can be computed using $f$.
+This intuitively captures anything the adversary is interested in learning about the message.
+For example, maybe $M$ is some long sequence of internal government messages, and $f(M)$ is the result of applying some search pattern or LLM algorithm (say, how many times ``Eastasia'' appears in $M$.).
+
+As unknown (or partial) information is modeled using distributions, $f(\distrof{M})$ then corresponds to a guess on whatever properties satisfied by an unseen message.
+\Cref{eq:otp-property} shows that the distribution $f(\distrof{M})$ is independent from the ciphertext $C$.
+In other words, by receiving $C=c$, the adversary gains no additional information beyond what it can compute locally from $f(\distrof{M})$ for a random message.
+
+\section*{Problem 5}
+
+\subsection*{Part a}
+
+Let $f(n)$ and $g(n)$ be polynomials.
+By definition, there exists $c_f$ so that $f(n) = O(n^{c_f})$,
+and similarly for $c_g$.
+We then have
+\begin{align*}
+    f(n)+g(n) &= O(n^{c_f} + n^{c_g}) \\ &=O(n^{\max(c_f, c_g)})
+\end{align*} and $f(n)g(n) = O(n^{c_f+c_g})$.
+
+\subsection*{Part b}
+
+Let $p(n)$ be a polynomial.
+We will find an $N$ such that $f(n)+g(n) < \frac{1}{p(n)}$ for all $n>N$.
+As $f(n)$ is negligible, and $2p(n)$ is polynomial as well, there exists $N_f$ so that for all $n > N_f$ we have $f(n)<\frac{1}{2p(n)}$.
+Define $N_g$ similarly.
+We then have for all $n > N := \max(N_f, N_g)$, $f(n)+g(n)<\frac{1}{p(n)}$.
+
+\subsection*{Part c}
+
+Let $q(n)$ be a polynomial.
+As $f(n)$ is negligible and $p(n)q(n)$ is a polynomial, there exists some $N$ so that $f(n) < \frac{1}{p(n) q(n)}$ for all $n > N$.
+It follows that $f(n)p(n)<\frac{1}{q(n)}$.
+
+\section*{Problem 6}
+
+\subsection*{Part a}
+
+Observe that the event that \emph{at least one} trial succeeds is equivalent to that \emph{any} trial succeeds, so we can write
+\begin{equation*}
+    E_n' = \bigvee_{i=1}^n E_i,
+\end{equation*}
+as ``(trial 1 succeeds) or (trial 2 succeeds) or ...".
+We therefore have
+\begin{align}
+    \Pr\sqp{E_n'}&=\Pr\sqp{\bigvee_{i=1}^n E_i} \\
+    &\leq \sum_{i=1}^n\Pr\sqp{E_i} \label{eq:union-bound} \\
+    & \leq n \cdot \max_{i\in\set{1,\ldots, i}} \Pr\sqp{E_i}
+\end{align}
+where \Cref{eq:union-bound} is due to the union bound.
+As each $\Pr\sqp{E_i}$ is negligible, so is their maximum.
+Finally, we have shown in Problem 5(c) that a polynomial multiplied by a negligible function is negligible.
+
+\subsection*{Part b}
+
+Suppose an adversary tries an attack repeatedly.
+Let $E_i$ be the event of the $i$-th attack succeeds.
+By the analysis above, the probability of $E_n'$ corresponds to at least one attempt succeeds, which is negligible.
+
+\section*{Problem 7}
+
+\subsection*{Part a}
+
+We recall the ``Chernoff bound" from the textbook Proposition A.14:
+\begin{theorem}[Chernoff bound, rephrased]
+    \label{thm:chernoff}
+    Fix $\varepsilon>0$, $b\in\set{0, 1}$, and $m\in\mathbb{N}$.
+    For $1\leq i\leq m$, suppose $X_i=\Bern(\frac{1}{2}+\varepsilon)$ are all independent.
+    The probability of their majority value is not $b$ is then at most $e^{-\varepsilon^2m/2}$.
+\end{theorem}
+
+Now, choose $m=\lceil 2n\ln 2\cdot q^2(n) \rceil$.
+We define $\mathcal{B}$ to simply run $\mathcal{A}$ for $m$ times on the same input $x$, and output their majority value.
+(That is, if at least $\frac{m}{2}$ repetitions of $\mathcal{A}$ outputs $1$, then $\mathcal{B}$ outputs $1$;
+otherwise $\mathcal{B}$ outputs $0$.)
+By \Cref{thm:chernoff} then, we have
+$$\Pr\sqp{\mathcal{B}(x)\ne b}\leq e^{-\varepsilon^2m/2}\leq 2^{-n}.$$
+
+\subsection*{Part b}
+
+We have shown that if an adversary can attack repeatedly, then it can potentially break a scheme with overwhelming probability.
+For example, suppose that an adversary has a noticeable advantage in distinguishing $\mathsf{Enc}(0)$ from $\mathsf{Enc}(1)$,
+then the reduction above may be useful for distinguishing the ensemble of encryptions $\set{\mathsf{Enc}(0)}_{i=1}^n$ from $\set{\mathsf{Enc}(1)}_{i=1}^n$ with much better advantage.
+
+\end{document}
