@@ -1,0 +1,223 @@
+\documentclass{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{braket, physics}
+\usepackage{hyperref, cleveref}
+\usepackage{algorithm}
+\usepackage{xcolor}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\newcommand{\ga}[1]{{\noindent \textcolor{purple}{\emph{(GA: #1)}}}{}}
+
+\title{Homework 2 Solution Key}
+\author{Yi Lee}
+
+\DeclareMathOperator{\XOR}{XOR}
+
+\begin{document}
+
+\include{macros}
+
+\maketitle
+
+\section*{Problem 1}
+
+\subsection*{Part a}
+
+No, $G$ is not a pseudorandom generator.
+Consider the following distinguisher $D(x)$:
+\begin{enumerate}
+    \item Unpack the input as $x=x_0||x_1$
+    \item Compute $r^* = x_0 \oplus x_1$
+    \item If $r^* = 0101\cdots01$, output $1$.
+    Otherwise output $0$.
+\end{enumerate}
+
+We then have
+$$\Pr_{s\gets\set{0, 1}^n}q\sqp{D(G(s))=1}=1$$
+by construction.
+On the other hand, we have
+$$\Pr_{y\gets\set{0, 1}^{2n}}\sqp{D(y)=1}=\frac{1}{2^{n}},$$
+as $r^*$ is uniformly random and compared with a fixed length-$n$ string $r=0101\cdots01$.
+
+\subsection*{Part b}
+
+No, $G$ is not a pseudorandom generator.
+Consider the following distinguisher $D(x)$:
+\begin{enumerate}
+    \item Unpack the input as $x=x_0||x_1$
+    \item If $f(x_0)=x_1$, output $1$.
+    Otherwise output $0$.
+\end{enumerate}
+We then have
+$$\Pr_{s\gets\set{0, 1}^n}q\sqp{D(G(s))=1}=1$$
+by construction.
+On the other hand, we claim
+$$\Pr_{r\gets\set{0, 1}^{2n}}\sqp{D(r)=1}=\frac{1}{2^{n}}.$$
+Observe that $x_1$ is uniformly random and $f(x_0)$ is independent from it.
+The probability they're equal is therefore simply the number of possible values of $x_1$.
+
+\subsection*{Part c}
+
+$G$ is a pseudorandom generator.
+We will prove this by reduction:
+suppose for the sake of contradiction that there exists a distinguisher $\mathcal{D}$ against $G$, and we construct a distinguisher $\mathcal{D}'$ against $H$.
+Our distinguisher $\mathcal{D}'(x)$ simply sends its input $x$ to $\mathcal{D}$ and output whatever it $\mathcal{D}(x)$ outputs.
+
+We then have the following bound:
+\begin{align*}
+   \Pr\sqp{\mathcal{D}(G(s))=1} &= \Pr\sqp{\mathcal{D}(G(s))=1\wedge s=0^n}+\Pr\sqp{\mathcal{D}(G(s))=1\wedge s\ne0^n} \\
+   &= \frac{1}{2^n} \Pr\sqp{\mathcal{D}'(0^{2n})=1} + \Pr\sqp{\mathcal{D}'(H(s))=1\wedge s\ne 0^n} \\
+   &= \frac{1}{2^n} \Pr\sqp{\mathcal{D}'(0^{2n})=1} + \Pr\sqp{\mathcal{D}'(H(s))=1}
+   \\
+   &\qquad - \Pr\sqp{\mathcal{D}'(H(s))=1 \wedge s=0^n} \\
+   &= \frac{1}{2^n} \Pr\sqp{\mathcal{D}'(0^{2n})=1} + \Pr\sqp{\mathcal{D}'(H(s))=1} \\
+   &\qquad - \frac{1}{2^n}\Pr\sqp{\mathcal{D}'(H(0^n))=1}.
+\end{align*}
+We therefore have
+\begin{equation*}
+    \abs{\Pr\sqp{\mathcal{D}(G(s))=1} - \Pr\sqp{\mathcal{D}'(H(s))=1}} < \frac{1}{2^n}.
+\end{equation*}
+By triangle inequality then, we can lower bound the advantage of our distinguisher $\mathcal{D}'$
+\begin{align*}
+    \abs{\Pr\sqp{\mathcal{D}'(H(s))=1} - \Pr\sqp{\mathcal{D}'(r)=1}} \geq \abs{\Pr\sqp{\mathcal{D}(G(s)=1} - \Pr\sqp{\mathcal{D}(r)=1}} - \frac{1}{2^n}
+\end{align*}
+which is not negligible.
+
+\section*{Problem 2}
+
+We have the following definition.
+\begin{definition}
+    \label{def:prg}
+    A function $G$ is a PRG if for all efficient adversaries $\mathcal{A}$,
+$$\abs{\Pr\sqp{\mathsf{PRGUESS}\sqp{G, \mathcal{A}} = 1}-\frac{1}{2}}\leq \mathsf{negl}(n).$$
+\end{definition}
+
+We now show that \Cref{def:prg} is equivalent to the textbook definition.
+First observe that
+\begin{align*}
+    \Pr\sqp{\mathsf{PRGUESS}\sqp{G, \mathcal{A}} = 1} &= \Pr\sqp{\mathsf{PRGUESS}\sqp{G, \mathcal{A}} = 1 \wedge b=0} \\
+    &\qquad + \Pr\sqp{\mathsf{PRGUESS}\sqp{G, \mathcal{A}} = 1 \wedge b=1} \\
+    &= \frac{1}{2} \Pr\sqp{\mathsf{PRGUESS}\sqp{G, \mathcal{A}} = 1 | b=0} \\
+    &\qquad + \frac{1}{2} \Pr\sqp{\mathsf{PRGUESS}\sqp{G, \mathcal{A}} = 1 | b=1} \\
+    &= \frac{1}{2}\Pr\sqp{\mathcal{A}(r)=0} + \frac{1}{2}\Pr\sqp{\mathcal{A}(G(s))=1} \\
+    &=\frac{1}{2}\Pr\sqp{\mathcal{A}(G(s))=1} +\frac{1}{2} - \frac{1}{2} \Pr\sqp{\mathcal{A}(r)=1}.
+\end{align*}
+We therefore have
+$$\abs{\Pr\sqp{\mathsf{PRGUESS}\sqp{G, \mathcal{A}} = 1}-\frac{1}{2}} = \frac{1}{2}\abs{\Pr\sqp{\mathcal{A}(G(s))=1} - \Pr\sqp{\mathcal{A}(r)=1}}.$$
+Notice that the expression above is syntactically similar to the textbook definition.
+The only difference is the extra multiplicative factor of $\frac{1}{2}$, which makes no difference as to whether a function is negligible.
+
+\section*{Problem 3}
+
+The scheme is \emph{not} IND.
+Consider the following adversary:
+\begin{enumerate}
+    \item Choose the messages $m_0=0^{n+1}$ and $m_1=0^n1$ for the challenger.
+    \item On receiving the ciphertext $c$, unpack it as $c=k^*||x$ where $k^*\in\set{0, 1}^n$ and $x\in\set{0, 1}$.
+    Compute and output $b'=x\oplus \XOR(k^*)$.
+\end{enumerate}
+By construction, this adversary wins the IND experiment with probability $1$.
+More concretely, it computes $k^*=k$ correctly,
+then we have
+\begin{align*}
+   b' &= c_{n+1}\oplus\XOR(k) \\
+   &= b \oplus \XOR(k)\oplus\XOR(k) \\
+   &= b
+\end{align*}
+with certainty.
+
+\section*{Problem 4}
+
+\subsection*{Part a}
+
+$F$ is \emph{not} a PRF.
+Consider the following adversary:
+\begin{enumerate}
+    \item Send the input $z=0^n$ to its oracle and receive some output $y\in\set{0, 1}^{2n}$
+    \item Let $y_0$ be the first $n$ of $y$.
+    If $y_0=0^n$, then output $1$;
+    otherwise, output $0$.
+\end{enumerate}
+We then have
+$\Pr\sqp{A^{F_k}(1^n)=1}=1$
+by construction.
+On the other hand, we have
+$\Pr\sqp{A^{R}(1^n)=1}=\frac{1}{2^n}$,
+as $y_0$ would be a uniformly random $n$-bit string.
+
+\subsection*{Part b}
+
+$F$ is \emph{not} a PRF, as it is not a deterministic function.
+
+Alternatively, one may want to implement $F$ by sampling its entire input/output table up-front.
+In that case, $F$ would be inefficient, as there are exponentially many input-output pairs.
+
+\subsection*{Part c}
+
+We will show that with certain choices of $G$, $F$ is not a PRF.
+More concretely, for all PRG $G$, there exists another PRG $G'$ so that $F_k(z)=G'(k || z)$ is not a PRF.
+The PRG $G'(x)$ can be defined as follows:
+\begin{enumerate}
+    \item Unpack $x = k || z$
+    \item If $z = 0^n$, output $0^\ell$; otherwise, output $G(x)$.
+\end{enumerate}
+
+This can be shown to be a PRG by the same argument as in part (1)(c).
+On the other hand, to show that $F_k(z)=G'(k || z)$ is not a PRF, consider the following adversary: \begin{enumerate}
+    \item Send $x=0^n$ to the oracle, and receive $y_0$.
+    \item Output $1$ if $y_0=0^\ell$, otherwise output $0$.
+\end{enumerate}
+We clearly have $\Pr\sqp{A^{F_k}(1^n)=1}=1$ and $\Pr\sqp{A^R(1^n)=1}=\frac{1}{2^\ell}$ for this adversary.
+
+\subsection*{Part d}
+
+$F$ is \emph{not} a PRF.
+Consider the following adversary:
+\begin{enumerate}
+    \item Send the input $x=0^n$ to its oracle and receive some output $y_0\in\set{0, 1}^n$
+    \item Send the input $x=0^{n-1}1$ to its oracle and receive some output $y_1\in\set{0, 1}^n$.
+    \item Compute $H_{y_0}(0^{n-1}1)$ locally.
+    If $H_{y_0}(0^{n-1}1)=y_1$, output $1$;
+    otherwise, output $0$.
+\end{enumerate}
+We then have
+$\Pr\sqp{A^{F_k}(1^n)=1}=1$
+by construction.
+On the other hand, we also have
+$\Pr\sqp{A^{R}(1^n)=1}=\frac{1}{2^n}$ as $y_1$ would be uniformly random and independent from $H_{y_0}(0^{n-1}1)$ in this case.
+
+\section*{Problem 5}
+
+Suppose there exists a nontrivial pseudorandom function $F_k$ with key length $n_k$, input length $n_i$, and output length $n_\ell$.
+We then have
+$n_k < 2^{n_i} n_\ell$;
+otherwise a truly random function can be constructed trivially by writing the key $k$ onto the output table.
+
+We now define the number of calls $a = \lceil\frac{n_k}{n_\ell}\rceil$ and the function $$G(x)= F_x(0)||F_x(1)||\ldots ||F_x(a - 1)$$
+where the inputs to $F$ are encoded in binary.
+Notice that this is well-defined, as we indeed have $\frac{n_k}{n_\ell}\leq 2^{n_i}$;
+moreover, this makes the output of $G(x)$ longer than its input.
+We will now prove $G(x)$ is a PRG by reduction:
+suppose that there exists an adversary $\mathcal{A}$ against $G$, then we will construct $\mathcal{B}$ against $F_k$ as follows:
+\begin{enumerate}
+    \item For each $0\leq i < a$, send the input $i$ to its oracle and receive some result $y_i$.
+    \item Set $y=y_0 || y_1 || \ldots || y_{a-1}$ as the concatenation of all $y_i$'s.
+    \item Run $\mathcal{A}(y)$ and output whatever it outputs.
+\end{enumerate}
+We then have
+\begin{align*}
+   \Pr\sqp{\mathcal{B}^{F_k}(1^n)=1}&=\Pr\sqp{\mathcal{A}(y)=1} \\
+   &=\Pr[\mathcal{A}(G(k))=1]
+\end{align*}
+and
+\begin{align*}
+    \Pr\sqp{\mathcal{B}^R(1^n)=1} &= \Pr\sqp{\mathcal{A}(r)=1}.
+\end{align*}
+We therefore have
+$$\abs{\Pr\sqp{\mathcal{B}^{F_k}(1^n)=1} - \Pr\sqp{\mathcal{B}^R(1^n)=1}} =
+\abs{\Pr\sqp{\mathcal{A}(G(k))=1} - \Pr\sqp{\mathcal{A}(r)=1}}.$$
+
+\end{document}
