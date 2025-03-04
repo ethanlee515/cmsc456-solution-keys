@@ -1,0 +1,140 @@
+\documentclass{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{braket, physics}
+\usepackage{hyperref, cleveref}
+\usepackage{algorithm}
+\usepackage{xcolor}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\newcommand{\ga}[1]{{\noindent \textcolor{purple}{\emph{(GA: #1)}}}{}}
+
+\title{Homework 3 Solution Key}
+\author{Yi Lee}
+
+\DeclareMathOperator{\XOR}{XOR}
+
+\begin{document}
+
+\include{macros}
+
+\maketitle
+
+\section*{Problem 1}
+
+Suppose $\mathsf{Enc}$ takes $n$-bit messages.
+Consider the following adversary against the IND-CPA game:
+\begin{enumerate}
+    \item Send $m_0=0^n$ and $m_1=0^{n-1}1$ to the challenger, and receive $c$.
+    \item Send $m_0$ to the encryption oracle, and receive $c_0$.
+    \item If $c=c_0$, output $0$. Otherwise, output $1$.
+\end{enumerate}
+By construction, this adversary wins the IND-CPA game with certainty.
+
+\section*{Problem 2}
+
+Consider the the same adversary $\mathcal{A}$ as in Problem 1 against the IND-CPA game:
+\begin{enumerate}
+    \item Send $m_0=0^n$ and $m_1=0^{n-1}1$ to the challenger, and receive $c$.
+    \item Send $m_0$ to the encryption oracle, and receive $c_0$.
+    \item If $c=c_0$, output $b'=0$. Otherwise, output $b'=1$.
+\end{enumerate}
+We claim that this adversary wins the IND-CPA game with non-negligible advantage.
+
+Suppose that the challenger samples some randomness $r$ during encryption, and the encryption oracle samples some $r'$ during encryption.
+Note that there are $2^{\log n} = n$ possible $r$'s.
+Moreover, $r$ and $r'$ are sampled independently and uniformly randomly.
+We therefore have $\Pr\sqp{r=r'}=\frac{1}{n}$.
+The winning probability of the adversary is then
+\begin{align*}
+    \Pr\sqp{CPA[\Pi, \mathcal{A}] = 1} &= \Pr\sqp{b = b'} \\
+    &=\Pr\sqp{b = b' = 0} + \Pr\sqp{b = b' = 1} \\
+    &=\frac{1}{2} \Pr\sqp{b' = 0 | b = 0} + \frac{1}{2}\Pr\sqp{b' = 1 | b = 1} \\
+    &=\frac{1}{2} \parens{\Pr\sqp{b'=0 \wedge r=r' | b=0} + \Pr\sqp{b'=0 \wedge r\ne r' | b=0}} \\
+    &\qquad + \frac{1}{2}\Pr\sqp{b' = 1 | b = 1}\\
+    &= \frac{1}{2} \Pr\sqp{b'=0 | r=r' \wedge b=0}\cdot \Pr\sqp{r=r' | b=0} \\
+    &\qquad + \frac{1}{2} \Pr\sqp{b'=0 | r\ne r' \wedge b=0}\cdot \Pr\sqp{r\ne r' | b=0} \\
+    &\qquad + \frac{1}{2}\Pr\sqp{b' = 1 | b = 1} \\
+    &=\frac{1}{2}\cdot1\cdot \frac{1}{n} + \frac{1}{2}\cdot 0\cdot \parens{1-\frac{1}{n}} + \frac{1}{2} \\
+    &= \frac{1}{2} + \frac{1}{2n}.
+\end{align*}
+We conclude that our attacker wins with non-negligible advantage, and therefore the scheme is not IND-CPA secure.
+
+\section*{Problem 3}
+
+Consider the following adversary.
+\begin{enumerate}
+    \item Send the messages $m_0=0^n$ and $m_1=0^{n-1}1$ to the challenger, and receive $c$.
+    \item Parse $(r, a)\gets c$.
+    \item Send $(m_0, r)$ to $\mathcal{O}_k$, receive $c_0$.
+    \item If $c=c_0$, output $0$. Otherwise, output $1$.
+\end{enumerate}
+By construction, this adversary breaks IND with certainty.
+More concretely, \begin{itemize}
+    \item If $b=0$, the adversary outputs $b'=0$ by construction.
+    \item If $b=1$, then $c_0$ and $c$ are valid ciphertexts corresponding to different plaintexts.
+    By correctness then, we must have $c_0\ne c$ and therefore $b'=1$.
+\end{itemize}
+
+\section*{Problem 4}
+
+\subsection*{Part a}
+
+No.
+Suppose the adversary queries the decryption oracle with some chosen input $c=(r^*, a)$, and receives some message $m$ as the decryption result.
+In that case, the adversary learns no more than $F_k(r^*)=a\oplus m$.
+In other words, for all $r\ne r^*$, $F_k(r)$ still appears uniformly random in the view of the adversary.
+
+Throughout the rest of the interaction,
+the challenger and the oracle encrypt messages chosen by the adversary.
+With overwhelming (that is, all but negligible) probability,
+they sample $r_i$ during encryption that satisfy $r_i\ne r^*$ for all $r_i$.
+All the ciphertexts received by the adversary therefore are one-time padded by $F_k(r_i)$ and contain no useful information.
+
+We conclude that the adversary learns nothing about $b$, and cannot guess it with non-negligible advantage.
+
+\subsection*{Part b}
+
+Yes.
+Consider the following attacker.
+\begin{enumerate}
+    \item Send the messages $m_0=0^n$ and $m_1=0^{n-1}1$ to the challenger, and receive $c$.
+    \item Send $c$ to the decryption oracle, receive $m$.
+    \item If $m=m_0$, output $0$. Otherwise, output $1$.
+\end{enumerate}
+By construction, this attacker wins with certainty.
+
+\subsection*{Part c}
+
+Yes.
+Consider the following attacker.
+\begin{enumerate}
+    \item Send the messages $m_0=0^n$ and $m_1=0^{n-1}1$ to the challenger, and receive $c$.
+    \item Parse $(r, a)\gets c$.
+    \item Evaluate $a'\gets a\oplus 0^{n-1}1$.
+    \item Send $(r, a')$ to the decryption oracle, receive $m$.
+    \item If $m=0^{n-1}1$, output $1$. Otherwise, output $0$.
+\end{enumerate}
+We claim that this attacker wins with certainty.
+\begin{itemize}
+    \item If $b=0$, we have $a=F_k(0^n)$.
+    We then have
+    \begin{align*}
+        \mathsf{Dec}_k((r, a'))&=a' \oplus F_k(r) \\
+        &= F_k(r)\oplus 0^{n-1}1\oplus F_k(r) \\
+        &= 0^{n-1}1
+    \end{align*}
+    and $b'=0$ with certainty.
+    \item If $b=1$, we have $a=F_k(r)\oplus 0^{n-1}1$ and $a'=F_k(r)$.
+    We then have
+    \begin{align*}
+        \mathsf{Dec}_k((r, a'))&=a' \oplus F_k(r) \\
+        &= F_k(r)\oplus F_k(r) \\
+        &= 0^n
+    \end{align*}
+    and $b'=1$ with certainty.
+\end{itemize}
+
+\end{document}

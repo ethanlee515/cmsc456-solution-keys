@@ -1,0 +1,121 @@
+\documentclass{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{braket, physics}
+\usepackage{hyperref, cleveref}
+\usepackage{algorithm}
+\usepackage{xcolor}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\newcommand{\ga}[1]{{\noindent \textcolor{purple}{\emph{(GA: #1)}}}{}}
+
+\title{Midterm Solution Key}
+\author{Yi Lee}
+
+\DeclareMathOperator{\XOR}{XOR}
+
+\begin{document}
+
+\include{macros}
+
+\maketitle
+
+\section*{Problem 1}
+
+No, the result is \emph{not} perfectly secret.
+More concretely, we show that not all ciphertexts are equally likely.
+
+Consider $m_0=0^n$ and $m_1=0^{n-1}1$.
+We have
+$\Pr\sqp{\mathsf{Enc}(m_0)=0^n}=0$
+and
+$\Pr\sqp{\mathsf{Enc}(m_1)=0^n}=\frac{1}{2^n}$.
+
+\section*{Problem 2}
+
+Let $\mathcal{D}$ be any arbitrary distinguisher.
+
+We have
+\begin{align*}
+    \abs{\Pr_s\sqp{\cD(L(s))=1}-\Pr_r\sqp{\cD(r)=1}} &= \abs{\Pr_s\sqp{\cD(H(G(s)))=1}-\Pr_r\sqp{\cD(r)=1}} \\
+    &\leq \abs{\Pr_s\sqp{\cD(H(G(s)))=1}-\Pr_{r'}\sqp{\cD(H(r'))=1}} \\
+    &\qquad + \abs{\Pr_{r'}\sqp{\cD(H(r')=1}-\Pr_r\sqp{\cD(r)=1}} \\
+    &= \abs{\Pr_s\sqp{(\cD\circ H)(G(s))=1}-\Pr_{r'}\sqp{(\cD\circ H)(r')=1}} \\
+    &\qquad + \abs{\Pr_{r'}\sqp{\cD(H(r')=1}-\Pr_r\sqp{\cD(r)=1}}
+\end{align*}
+where we first apply triangle inequality,
+then rewrite $\cD'=(\cD\circ H)$ as a composition of two programs.
+We conclude that the right hand side is negligible, as it is the sum of two negligible functions.
+
+\section*{Problem 3}
+
+\subsection*{Part a}
+
+Consider the following adversary.
+\begin{enumerate}
+    \item Send $x=0^n$ to the oracle, receive $y_1$.
+    \item Send $x=1^n$ to the oracle, receive $y_2$.
+    \item Unpack $(a_1, b_1)\gets y_1$ and $(a_2, b_2)\gets y_2$.
+    \item If $a_1=b_2$ and $b_1=a_2$, output $0$. Otherwise, output $1$.
+\end{enumerate}
+This adversary wins with all but negligible probability.
+\begin{itemize}
+    \item On the oracle being $H$, it wins with certainty by construction.
+    \item On the oracle being truly random, $a_1, a_2, b_1, b_2$ are all uniformly random and independent.
+    The adversary therefore answers $0$ with probability $\frac{1}{2^{2n}}$.
+\end{itemize}
+
+\subsection*{Part b}
+
+Consider the following adversary.
+\begin{enumerate}
+    \item Send $x=0^{n-1}$ to the oracle, receive $y_1$.
+    \item Send $x=0^{n-2}1$ to the oracle, receive $y_2$.
+    \item Unpack $(a_1, b_1)\gets y_1$ and $(a_2, b_2)\gets y_2$.
+    \item If $b_1=a_2$, output $0$. Otherwise, output $1$.
+\end{enumerate}
+This adversary wins with all but negligible probability.
+\begin{itemize}
+    \item On the oracle being $H$, it wins with certainty by construction.
+    \item On the oracle being truly random, $b_1$ and $a_2$ are uniformly random and independent.
+    The adversary therefore answers $0$ with probability $\frac{1}{2^{n}}$.
+\end{itemize}
+
+\section*{Problem 4}
+
+We will restate the scheme from the lecture and show its correctness.
+
+Let $F:\set{0, 1}^n\times \set{0, 1}^\ell \rightarrow \set{0, 1}^t$ be a PRF.
+\begin{itemize}
+    \item Keygen: On input $1^n$, sample and output a uniformly random PRF key $k\gets\set{0, 1}^n$.
+    \item Encryption. On inputs $k$ and $m\in\set{0, 1}^t$: \begin{enumerate}
+        \item Sample a random string $r\gets\set{0, 1}^\ell$
+        \item Evaluate $a\gets F_k(r) \oplus m$
+        \item Output $c\gets (r, a)$
+    \end{enumerate}
+    \item Decryption. On inputs $k$ and $c$: \begin{enumerate}
+        \item Unpack $(r, a) \gets c$
+        \item Output $m\gets a\oplus F_k(r)$
+    \end{enumerate}
+\end{itemize}
+
+We now show correctness.
+For all key $k$ and message $m$, we have
+\begin{align*}
+    \mathsf{Dec}_k(\mathsf{Enc}_k(m)) &= \mathsf{Dec}_k(r, F_k(r)\oplus m) \\
+    &= F_k(r)\oplus m \oplus F_k(r) \\
+    &= m
+\end{align*}
+
+\section*{Problem 5}
+
+We restate the MAC construction from the lecture.
+Let $F:\set{0, 1}^n\times \set{0, 1}^\ell \rightarrow \set{0, 1}^t$ be a PRF.
+\begin{itemize}
+    \item Keygen: On input $1^n$, sample and output a uniformly random PRF key $k\gets\set{0, 1}^n$.
+    \item Tag generation: On inputs $k\in\set{0, 1}^n$ and $m\in\set{0, 1}^\ell$, output $F_k(m)$.
+\end{itemize}
+
+\end{document}
