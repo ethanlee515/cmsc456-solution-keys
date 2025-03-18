@@ -1,0 +1,118 @@
+\documentclass{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{braket, physics}
+\usepackage{hyperref, cleveref}
+\usepackage{algorithm}
+\usepackage{xcolor}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\newcommand{\ga}[1]{{\noindent \textcolor{purple}{\emph{(GA: #1)}}}{}}
+
+\title{Homework 4 Solution Key}
+\author{Yi Lee}
+
+\DeclareMathOperator{\XOR}{XOR}
+
+\begin{document}
+
+\include{macros}
+
+\maketitle
+
+\section*{Problem 1}
+
+We will show that the construction is not secure if, roughly speaking, $G$ ignores the final bit of its input.
+Formally, given any PRG $H:\set{0, 1}^n\rightarrow\set{0, 1}^\ell$,
+consider the function $H':\set{0, 1}^{n+1}\rightarrow\set{0, 1}^\ell$ defined to: \begin{enumerate}
+    \item On input $x\in\set{0, 1}^{n+1}$, split it as $x=a || b$ where $a$ contains the first $n$ bits of $x$.
+    \item Output $H(a)$.
+\end{enumerate}
+We will show that $H'$ is a PRG, and that the mac $\mathsf{MAC}_k(m)=H'(k || m)$ is not one-time secure.
+First, to show that $H'$ is a PRG, notice that $H'(s)$ and $H(s)$ are identically distributed, so for any distinguisher $\mathcal{D}$ we have
+$\Pr[\mathcal{D}(H'(s))=1]=\Pr[\mathcal{D}(H(s))=1]$.
+It therefore follows that
+\begin{align*}
+    \abs{\Pr[\mathcal{D}(H'(s))=1] - \Pr[\mathcal{D}(r)=1]} =
+    \abs{\Pr[\mathcal{D}(H(s))=1] - \Pr[\mathcal{D}(r)=1]}
+\end{align*}
+is negligible for any distinguisher $\mathcal{D}$ due to the security of $H$.
+Now, to show that the MAC is not one-time secure, consider the following adversary:
+\begin{enumerate}
+    \item Send the message $m=0^n1$ to the challenger and receive the reply $t$.
+    \item Output the forgery $(0^{n+1}, t)$.
+\end{enumerate}
+By construction, the forgery succeeds with certainty.
+
+\section*{Problem 2}
+
+Suppose for the sake of contradiction that the MAC is \emph{not} one-time secure.
+In other words, there exists an adversary $\mathcal{A}$ and a polynomial $q(n)$ such that
+$\mathsf{OTForge}(\Pi, \mathcal{A})\geq\frac{1}{p} + \frac{1}{q(n)}$,
+where $\Pi$ is the MAC scheme provided.
+
+Consider then the following reduction $\mathcal{R}^\mathcal{A}(x)$ to the PRG game:
+\begin{enumerate}
+    \item Unpack the input $(a, b)\gets x$.
+    \item Receive $m$ from $\mathcal{A}$.
+    \item Evaluate $t\gets(a\cdot m+b \mod p)$ and send it to $\mathcal{A}$.
+    \item Receive the forgery $(m^*, t^*)$ from $\mathcal{A}$.
+    \item Evaluate $t'\gets(a\cdot m^* + b \mod p)$.
+    \item If $m\ne m^*$ and $t' = t^*$, return $1$. Otherwise, return $0$.
+\end{enumerate}
+First, as the experiment $\mathcal{R}^{\mathcal{A}}(G(s))$ is equivalent to $\mathsf{OTForge}(\Pi, A)$, we have
+\begin{align*}
+\Pr[\mathcal{R}^{\mathcal{A}}(G(s))=1]&= \Pr[\mathsf{OTForge}(\Pi, \mathcal{A})=1] \\
+&\geq\frac{1}{p} + \frac{1}{q(n)}
+\end{align*}
+by assumption.
+On the other hand, the experiment $\mathcal{R}^{\mathcal{A}}(r)$ is equivalent to $\mathsf{OTForge}(\Pi', \mathcal{A})$,
+where $\Pi'$ is the one-time MAC scheme constructed and proven secure in the lecture.
+We therefore have
+\begin{align*}
+\Pr[\mathcal{R}^{\mathcal{A}}(r)=1]&= \Pr[\mathsf{OTForge}(\Pi', \mathcal{A})=1] \\
+&=\frac{1}{p}.
+\end{align*}
+Finally, putting everything together, we conclude that
+\[
+\abs{\Pr[\mathcal{R}^{\mathcal{A}}(G(s))=1] - \Pr[\mathcal{R}^{\mathcal{A}}(r)=1]}\geq \frac{1}{q(n)}.\]
+
+\section*{Problem 3}
+
+\subsection*{Part a}
+
+Consider the following adversary.
+\begin{enumerate}
+    \item Send $(0^\ell, 1^\ell)$ to the oracle and receive the tag $t$.
+    \item Set $m\gets (1^\ell, 0^\ell)$.
+    \item Output the forgery $(m, t)$.
+\end{enumerate}
+By construction, this adversary wins with certainty. 
+
+\subsection*{Part b}
+
+Consider the following adversary.
+\begin{enumerate}
+    \item Send $(0^\ell, 1^\ell)$ to the oracle, receive the tag $t$.
+    \item Unpack $(y_1, y_2)\gets t$
+    \item Set $m=(1^\ell, 0^\ell)$ and $t'\gets (y_2, y_1)$.
+    \item Output the forgery $(m, t')$.
+\end{enumerate}
+By construction, this adversary wins with certainty.
+
+\subsection*{Part c}
+
+Consider the following adversary.
+\begin{enumerate}
+    \item Send $(0^\ell, 0^{\ell-1}1)$ to the oracle and receive the tag $t$.
+    \item Unpack $(y_1, y_2)\gets t$.
+    \item Send $(0^{\ell - 1}1, 0^\ell)$ to the oracle and receive the tag $t_2$.
+    \item Unpack $(z_1, z_2)\gets t_2$.
+    \item Set the message as $m^*\gets 0^{2\ell}$ and forgery as $t^*\gets (y_1, z_2)$.
+    \item Output the forgery $(m^*, t^*)$.
+\end{enumerate}
+By construction, this adversary wins with certainty.
+
+\end{document}

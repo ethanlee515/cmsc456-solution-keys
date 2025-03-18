@@ -62,6 +62,10 @@ The winning probability of the adversary is then
 \end{align*}
 We conclude that our attacker wins with non-negligible advantage, and therefore the scheme is not IND-CPA secure.
 
+(Alternatively, one may consider an adversary that repeatedly queries the encryption oracle with both $m_0$ and $m_1$, until it receives the outcome $c_{b, i}=c$.
+With all but negligible probability, the encryption oracle will indeed sample $r_{b, i}=r$ within polynomially many queries.
+We omit presenting this solution formally.)
+
 \section*{Problem 3}
 
 Consider the following adversary.
@@ -115,18 +119,18 @@ Consider the following attacker.
     \item Parse $(r, a)\gets c$.
     \item Evaluate $a'\gets a\oplus 0^{n-1}1$.
     \item Send $(r, a')$ to the decryption oracle, receive $m$.
-    \item If $m=0^{n-1}1$, output $1$. Otherwise, output $0$.
+    \item If $m=0^{n-1}1$, output $0$. Otherwise, output $1$.
 \end{enumerate}
 We claim that this attacker wins with certainty.
 \begin{itemize}
-    \item If $b=0$, we have $a=F_k(0^n)$.
+    \item If $b=0$, we have $a=F_k(r)$.
     We then have
     \begin{align*}
         \mathsf{Dec}_k((r, a'))&=a' \oplus F_k(r) \\
         &= F_k(r)\oplus 0^{n-1}1\oplus F_k(r) \\
         &= 0^{n-1}1
     \end{align*}
-    and $b'=0$ with certainty.
+    and $b'=0$ with certainty. 
     \item If $b=1$, we have $a=F_k(r)\oplus 0^{n-1}1$ and $a'=F_k(r)$.
     We then have
     \begin{align*}
@@ -134,7 +138,7 @@ We claim that this attacker wins with certainty.
         &= F_k(r)\oplus F_k(r) \\
         &= 0^n
     \end{align*}
-    and $b'=1$ with certainty.
+    and $b'=1$ with certainty. 
 \end{itemize}
 
 \end{document}

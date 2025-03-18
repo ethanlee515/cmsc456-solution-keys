@@ -60,7 +60,7 @@ Consider the following adversary.
     \item Unpack $(a_1, b_1)\gets y_1$ and $(a_2, b_2)\gets y_2$.
     \item If $a_1=b_2$ and $b_1=a_2$, output $0$. Otherwise, output $1$.
 \end{enumerate}
-This adversary wins with all but negligible probability.
+This adversary wins with all but negligible probability:
 \begin{itemize}
     \item On the oracle being $H$, it wins with certainty by construction.
     \item On the oracle being truly random, $a_1, a_2, b_1, b_2$ are all uniformly random and independent.

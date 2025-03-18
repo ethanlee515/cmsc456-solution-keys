@@ -1,0 +1,56 @@
+\documentclass{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{braket, physics}
+\usepackage{hyperref, cleveref}
+\usepackage{algorithm}
+\usepackage{xcolor}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\newcommand{\ga}[1]{{\noindent \textcolor{purple}{\emph{(GA: #1)}}}{}}
+
+\title{Homework 5 Solution Key}
+\author{Yi Lee}
+
+\DeclareMathOperator{\Sym}{Sym}
+
+\begin{document}
+
+\include{macros}
+
+\maketitle
+
+\section*{Problem 1}
+
+TODO
+
+\section*{Problem 2}
+
+TODO
+
+\section*{Problem 3}
+
+\subsection*{Part a}
+
+We show that all ciphertexts are equally likely.
+For all messages $m$ and ciphertext $c$, we have
+\begin{align*}
+    \Pr_{k}[c=\mathsf{Enc}(m)]&=\Pr_{P\in\Sym(2^n)}[P(m)=c]\\
+    &=\frac{1}{2^n}
+\end{align*}
+since there are $2^n$ equally likely outcomes that $P(m)$ could map to.
+
+\subsection*{Part b}
+
+Consider the ``lazy sampling" hybrid as follows:
+\begin{itemize}
+    \item The oracle keeps a function table $f\subseteq \set{0, 1}^n\times \set{0, 1}^n$
+\end{itemize}
+
+\subsection*{Part c}
+
+TODO
+
+\end{document}
