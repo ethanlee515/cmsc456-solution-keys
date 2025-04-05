@@ -24,11 +24,81 @@
 
 \section*{Problem 1}
 
-TODO
+\subsection*{Part a}
+
+Let $S=\set{0, 1}^{2n}$ and consider the following attack $\cA(IV, c, s)$:
+\begin{enumerate}
+    \item Unpack $(IV, c_1, c_2)\gets c$ and $(s_1, s_2)\gets s$.
+    \item Output $c'=(IV, c_1\oplus s_1, c_2\oplus s_2)$.
+\end{enumerate}
+We now show this attack works.
+Let $(m_1', m_2')=\mathsf{Dec}_k(c')$ and $(m_1, m_2)=\mathsf{Dec}_k(c)$.
+By unfolding $\mathsf{Dec}_k(c')$ then, we have
+\begin{align*}
+    m_1'&=E_k(IV||0)\oplus c_1' \\
+    &=E_k(IV||0)\oplus c_1\oplus s_1\\
+    &=m_1\oplus s_1
+\end{align*}
+and similarly
+\begin{align*}
+    m_2'&=E_k(IV||1)\oplus c_2' \\
+    &=E_k(IV||1)\oplus c_2\oplus s_2\\
+    &=m_2\oplus s_2
+\end{align*}
+Putting everything together then, we conclude that $(m_1', m_2')=(m_1, m_2)\oplus s$.
+
+\subsection*{Part b}
+
+Let $S=\set{0, 1}^{2n}$ and consider the same attack $\cA(IV, c, s)$ as before:
+\begin{enumerate}
+    \item Unpack $(IV, r)\gets c$ where $r$ contains both blocks.
+    \item Output $c'=(IV, r\oplus s)$.
+\end{enumerate}
+We now show this attack works.
+Let $a=(E_k(IV), E_k(E_k(IV))$.
+By unfolding $\mathsf{Dec}_k(c')$ then, we have
+\begin{align*}
+    \mathsf{Dec}_k(c')&=r\oplus s\oplus a \\
+    &=(r\oplus a) \oplus s \\
+    &=\mathsf{Dec}_k(c)\oplus s.
+\end{align*}
+
+\subsection*{Part c}
+
+We have $S=\set{s_1||0^n : s_1\in \set{0, 1}^{n}}$; that is, $s$ are strings with arbitrary first half which we label as $s_1$, and second half $0^n$.
+Consider the following adversary $\cA(c, s)$: \begin{enumerate}
+    \item Unpack $(IV, r)\gets c$ and $(s_1, \textunderscore)\gets s$.
+    \item output $(IV\oplus s_1, r)$
+\end{enumerate}
+We now show this attack works.
+Let $(m_1', m_2')=\mathsf{Dec}_k(c')$ and $(m_1, m_2)=\mathsf{Dec}_k(c)$.
+By unfolding $\mathsf{Dec}_k(c')$ then, we have
+\begin{align*}
+    m_2'&=c_1\oplus E_k^{-1}(c_2)\\
+    &=m_2
+\end{align*}
+and
+\begin{align*}
+    m_1'&=IV\oplus s_1\oplus E_k^{-1}(c_1)\\
+    &=m_1\oplus s_1. 
+\end{align*}
+Collecting everything, we conclude that
+$(m_1', m_2')=(m_1, m_2)\oplus s$.
 
 \section*{Problem 2}
 
-TODO
+Fix some $s_0\ne 0^{2n}$ in Problem 1, and define the algorithm $\cA'(c)=\cA(c, s_0)$.
+For all key $k$ then, we have $\mathsf{Dec}(\cA'(\mathsf{Enc}(0^n)))=s$.
+Moreover, for all ciphertext $c$, we have $\cA(c)\ne c$ by the correctness of encryption.
+Now consider the following adversary $\cR$ against the IND-CCA security of $\Pi$:
+\begin{enumerate}
+    \item Choose $m_0=0^n$ and $m_1=1^n$ and send them to the challenger.
+    \item Receive the ciphertext $c$ from the challenger
+    \item Evaluate $c^*\gets \cA'(c)$ and send it to the decryption oracle.
+    \item Receive $m^*$ from the decryption oracle.
+    \item If $m^*=s$, send $b^*=0$ to the challenger. Otherwise, send $b^*=1$ to the challenger.
+\end{enumerate}
+This adversary $\cR$ wins the IND-CCA game with certainty, as we have $m^*=s$ in the $b=0$ case and $m^*=1^n\oplus s$ in the $b=1$ case.
 
 \section*{Problem 3}
 
@@ -44,13 +114,69 @@ since there are $2^n$ equally likely outcomes that $P(m)$ could map to.
 
 \subsection*{Part b}
 
-Consider the ``lazy sampling" hybrid as follows:
-\begin{itemize}
-    \item The oracle keeps a function table $f\subseteq \set{0, 1}^n\times \set{0, 1}^n$
-\end{itemize}
+We will prove directly that for all efficient adversary $\cA$, we have $$\Pr[\mathsf{PrivK}^{\mathsf{cpa}}_{\Pi_{\mathsf{ideal}}, \cA}(n)=1]\leq \frac{1}{2}+\frac{q}{2^n}$$
+where $q$ is the maximum number of encryption queries made by $\cA$.
+(Note that $q$ is a polynomial, as $\cA$ is efficient; therefore $\frac{q}{2^n}$ is indeed negligible.)
+We now bound the winning probability of $\cA$ through a series of hybrids:
+\begin{enumerate}
+    \item In the hybrid $\Hyb_1$, the permutation $P$ is evaluated lazily instead.
+    That is, each input-output pair of $P$ is sampled on-the-fly when $P$ is evaluated on any new input.
+    \item In the hybrid $\Hyb_2$, the challenger always encrypts $m_0$ instead of $m_b$ for the challenge ciphertext, though $b$ remains randomly sampled as before and checked against $b^*$.
+\end{enumerate}
+We have $\PrivK^\cpa_{\cA, \Pi_\ideal}(n)=\Hyb_1$, as lazy sampling does not change the observable behavior of a function.
+We next show that $\Hyb_1$ and $\Hyb_2$ are close.
+Suppose the challenger samples the randomness $r'$ while encrypting the challenge ciphertext, and the encryption oracle samples the randomness $r_i$ for the $i$-th query.
+We can then upper bound the probability of a collision with $r'$:
+\begin{align*}
+    \Pr[\exists i, r_i=r'] &= \Pr[\bigvee_{i=1}^q r_i=r'] \\
+    &\leq \sum_{i=1}^q \Pr[r_i=r'] \\
+    &=\sum_{i=1}^q\frac{1}{2^n} \\
+    &=\frac{q}{2^n}
+\end{align*}
+which is indeed negligible.
+Conditioned on there being no collision with $r'$,
+$\Hyb_1$ and $\Hyb_2$ differ by only a single entry in $P$ (either $(m_b, r')$ or $(m_0, r')$) for which the rest of the experiment does not depend on.
+Therefore $\Hyb_1$ and $\Hyb_2$ are equivalent conditioned on there being no collisions with $r'$, and we have
+$$\abs{\Pr[\Hyb_1=1]-\Pr[\Hyb_2=1]}\leq \frac{q}{2^n}.$$
+Finally, we have $\Pr[\Hyb_2=1]=\frac{1}{2}$, as $b^*$ is independent of $b$ in $\Hyb_2$.
+(We can observe that $b$ is unused in $\Hyb_2$ until it is compared against $b^*$, so the challenger could in fact delay sampling $b$ until it receives $b^*$.)
+We therefore have $\Pr[b=b^*]=\frac{1}{2}$.
+Combining everything, we have
+\begin{align*}
+    \Pr[\PrivK^\cpa_{\cA, \Pi_\ideal}(n)=1] &= \Pr[\Hyb_1=1] \\
+    &\leq \Pr[\Hyb_2=1] + \frac{q}{2^n} \\
+    &=\frac{1}{2}+\frac{q}{2^n}.
+\end{align*}
 
 \subsection*{Part c}
 
-TODO
+We will prove the security of $\Pi_E$ by reducing to that of the pseudorandom permutation $E$.
+Suppose for the sake of contradiction that there exists an adversary $\cA$ that breaks the security of $\Pi_E$;
+more concretely, suppose
+$$\Pr[\PrivK^{\cpa}_{\cA, \Pi_E}(n)=1]\geq \frac{1}{2}+\frac{1}{p(n)}$$
+for some polynomial $p(n)$.
+Consider then the following reduction $\cD$ against the pseudorandomness of $E$: \begin{enumerate}
+    \item Sample $b\gets\set{0, 1}$ randomly
+    \item Receive message $(m_0, m_1)$ from $\cA$
+    \item Sample a random $r$
+    \item Send $m_b||r$ to the oracle, and forward the outcome to $\cA$
+    \item On encryption queries from $\cA$ with input $m$:
+    \begin{enumerate}
+        \item Sample random $r$
+        \item Send $m||r$ to the oracle and forward the outcome to $\cA$
+    \end{enumerate}
+    \item Receive $b^*$ from $\cA$.
+    \item If $b=b^*$, output $1$; otherwise, output $0$.
+\end{enumerate}
+We now show that $\cD$ is a distinguisher against $E$:
+\begin{itemize}
+    \item The experiment $\cD^{E_k}$ is equivalent to
+    $\PrivK^\cpa_{\cA, \Pi_E}$, so we have $\Pr[\cD^{E_k}=1]\geq\frac{1}{2}+\frac{1}{p(n)}$.
+    \item The experiment $\cD^{P}$ is equivalent to  $\PrivK^\cpa_{\cA, \Pi_\ideal}$, so we have
+    $\Pr[\cD^{P}=1]=\frac{1}{2}$.
+\end{itemize}
+Combining everything, we have
+$\abs{\Pr[\cD^{E_k}=1]-\Pr[\cD^{P}=1]} \geq \frac{1}{p(n)}$,
+which is not negligible.
 
 \end{document}
